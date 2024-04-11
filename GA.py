@@ -61,7 +61,7 @@ def mutation(dna: torch.Tensor, Pm: float):
     return dna
 
 
-def judge(dna: torch.Tensor):
+def judge(dna: torch.Tensor,):
     pass
 
 
