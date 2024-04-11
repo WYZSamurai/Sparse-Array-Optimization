@@ -61,6 +61,10 @@ def mutation(dna: torch.Tensor, Pm: float):
     return dna
 
 
+def judge(dna: torch.Tensor):
+    pass
+
+
 def GA(dna: torch.Tensor, L: int, m: int, n: int, G: int, Pc: float, Pm: float, l: float, d: float, delta: int, theta_0: float):
     ybest = torch.zeros((G,))
     dnabest = torch.zeros((G, m, n, L))
