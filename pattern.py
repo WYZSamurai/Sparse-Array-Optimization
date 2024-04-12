@@ -1,24 +1,25 @@
 import plotly.graph_objects as go
 import torch
+import generate
 
 
 # 线阵，等间距，等幅同相
-# dna(1,1,L) Fdb(delta,)
-def pattern(dna: torch.Tensor, l: float, d: float, delta: int, theta_0: float):
-    M = dna.shape[2]
-    ex = torch.complex(dna.reshape(M, 1), torch.zeros((M, 1)))
-    k = 2*torch.pi/l
+# dna(ME,) Fdb(delta,)
+def pattern(dna: torch.Tensor, lamb: float, d: float, delta: int, theta_0: float):
+    ME = dna.shape[0]
+    k = 2*torch.pi/lamb
     theta_0 = torch.tensor(theta_0)*torch.pi/180
     theta = torch.linspace(-torch.pi/2, torch.pi/2, delta)
 
-    phi = (torch.sin(theta)-torch.sin(theta_0)).reshape(delta, 1)
-    phi = torch.matmul(phi, torch.ones(1, M))
+    # ex(ME,)
+    ex = torch.complex(dna, torch.zeros(ME,))
+    # phi(delta,ME)
+    phi = (torch.sin(theta)-torch.sin(theta_0)).reshape(delta, 1).repeat(1, ME)
+    # nd(delta,ME)
+    nd = k*d*torch.arange(0, ME).reshape(1, ME).repeat(delta, 1)
 
-    nd = k*d*torch.arange(0, M).reshape(1, M)
-    nd = torch.matmul(torch.ones(delta, 1), nd)
-
-    phi = torch.exp(torch.complex(torch.zeros((delta, M)), phi*nd))
-    F = torch.matmul(phi, ex).abs().reshape(delta,)
+    phi = torch.exp(torch.complex(torch.zeros(delta, ME), phi*nd))
+    F = torch.matmul(phi, ex).abs()
     Fdb = 20*torch.log10(F/F.max())
     # print("Fdb为：\n", Fdb)
     return Fdb
@@ -45,17 +46,28 @@ def plot(Fdb: torch.Tensor, delta: int, theta_min: float, theta_max: float):
 
 
 if __name__ == "__main__":
-    theta_min = -90.0
-    theta_max = 90.0
-    (l, delta, theta_0) = (1, 360, 0)
-    d = l/2
-    G = 5
-    NP = 100
-    m = 1
-    n = 1
-    L = 20
+    # 种群数
+    NP = 50
+    # 交叉率
     Pc = 0.8
+    # 变异率
     Pm = 0.050
-    dna = torch.randint(0, 2, (m, n, L)).to(dtype=torch.float)
-    Fdb = pattern(dna, l, d, delta, theta_0)
-    print(Fdb)
+    # 迭代次数
+    G = 200
+    # 实际阵元个数
+    NE = 5
+    # 满阵阵元个数
+    ME = 10
+    # 波长（米）
+    lamb = 1
+    # 阵列间距
+    d = 0.5*lamb
+    # 波束指向（角度）
+    theta_0 = 0
+    # 扫描精度
+    delta = 180
+    # 阵列口径（米）
+    AA = d*(ME-1)
+
+    dna = generate.gen(NP, ME, NE)
+    Fdb = pattern(dna[0], lamb, d, delta, theta_0)
