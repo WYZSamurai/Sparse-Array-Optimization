@@ -1,36 +1,43 @@
 import torch
-import pattern
 
 
+# 计算最大副瓣电平
 def msll(Fdb: torch.Tensor):
-    maxi = Fdb.argmax()
-    indexr = torch.where(Fdb[maxi:].diff() > 0)[0][0]
-    if maxi == torch.tensor(0):
-        indexl = maxi
-    else:
-        indexl = torch.where(Fdb[:maxi].flip(0).diff() > 0)[0][0]
-    Fdb[maxi-indexl:maxi+indexr] = -60
-    mFdb = Fdb.max()
-    MSLL = mFdb
+    batch_size, delta = Fdb.shape
+
+    # 主瓣最大值的位置
+    maxi = Fdb.argmax(dim=1)
+
+    # 向右查找第一个电平增加的点
+    diffs_right = torch.diff(Fdb, dim=1)
+    right_changes = torch.cat([diffs_right, torch.full(
+        (batch_size, 1), -float('inf'), device=Fdb.device)], dim=1) > 0
+
+    # 构造一个大于maxi的序列索引矩阵
+    idx_right = torch.arange(delta, device=Fdb.device).repeat(batch_size, 1)
+    right_valid = (idx_right > maxi.unsqueeze(1)) & right_changes
+    indexr = torch.where(right_valid, idx_right, delta)
+    indexr = torch.min(indexr, dim=1).values - maxi
+
+    # 向左查找第一个电平增加的点
+    diffs_left = torch.diff(Fdb.flip(dims=[1]), dim=1)
+    left_changes = torch.cat([diffs_left, torch.full(
+        (batch_size, 1), -float('inf'), device=Fdb.device)], dim=1) > 0
+    idx_left = torch.arange(delta, device=Fdb.device).repeat(batch_size, 1)
+    left_valid = (idx_left > (delta - 1 - maxi).unsqueeze(1)) & left_changes
+    indexl = torch.where(left_valid, idx_left, delta)
+    # indexl(batch_size,)
+    indexl = torch.min(indexl, dim=1).values - (delta - 1 - maxi)
+
+    # 设置主瓣区域为-inf (maxi - indexl,maxi + indexr)
+    mask = torch.ones_like(Fdb, dtype=torch.bool)
+    ranges = torch.arange(delta, device=Fdb.device).repeat(batch_size, 1)
+    mask &= ~((ranges >= (maxi - indexl).unsqueeze(1)) &
+              (ranges <= (maxi + indexr).unsqueeze(1)))
+
+    Fdb = Fdb.masked_fill(~mask, float('-inf'))
+
+    # 寻找调整后的最大电平(batch_size,)
+    MSLL = Fdb.max(dim=1).values
+
     return MSLL
-
-
-if __name__ == "__main__":
-    theta_min = -90.0
-    theta_max = 90.0
-    (l, delta, theta_0) = (1, 360, 0)
-    d = l/2
-    G = 10000
-    NP = 100
-    m = 1
-    n = 1
-    L = 20
-    Pc = 0.8
-    Pm = 0.050
-
-    for i in range(G):
-        dna = torch.randint(0, 2, (m, n, L)).to(dtype=torch.float)
-        Fdb = pattern.pattern(dna, l, d, delta, theta_0)
-        print("第", i+1, "个Fdb为：\n", Fdb)
-        MSLL = msll(Fdb)
-        print("第", i+1, "个MSLL为：\n", MSLL)

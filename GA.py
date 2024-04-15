@@ -1,17 +1,13 @@
 import plotly.graph_objects as go
 import torch
-import generate
 import pattern
 import msll
 
 
 def fitness(dna: torch.Tensor, lamb: float, d: float, delta: int, theta_0: float):
-    NP = dna.shape[0]
-    fit = torch.zeros(NP,).to(dtype=torch.float)
-
-    for i in range(NP):
-        Fdb = pattern.pattern(dna[i], lamb, d, delta, theta_0)
-        fit[i] = -msll.msll(Fdb)
+    phase0 = torch.zeros_like(dna)
+    Fdb = pattern.pattern(dna, phase0, lamb, d, delta, theta_0)
+    fit = -msll.msll(Fdb)
 
     maxindex = torch.argmax(fit)
     minindex = torch.argmin(fit)
@@ -38,14 +34,19 @@ def selection(dna: torch.Tensor, fit: torch.Tensor):
 
 def crossover(dna: torch.Tensor, Pc: float):
     (NP, ME) = dna.shape
-    for i in range(0, NP, 2):
-        P = torch.rand(size=(1,)).item()
-        if P < Pc:
-            # [1,ME-2]
-            randcut = torch.randint(1, ME-1, (1,)).item()
-            temp = dna[i, randcut:].clone()
-            dna[i, randcut:] = dna[i+1, randcut:]
-            dna[i+1, randcut:] = temp
+    # 确定每对个体是否进行交换
+    swap_flags = torch.rand(NP // 2) < Pc
+    # 需要进行交换的个体对的索引
+    swap_indices = torch.where(swap_flags)[0] * 2
+    # 对于每一对需要进行交换的个体，生成一个随机的交换点
+    randcuts = torch.randint(1, ME-1, (swap_flags.sum(),))
+
+    # 执行交换操作
+    for idx, randcut in zip(swap_indices, randcuts):
+        # 交换基因片段
+        temp = dna[idx, randcut:].clone()
+        dna[idx, randcut:], dna[idx+1, randcut:] = dna[idx+1, randcut:], temp
+
     return dna
 
 
@@ -58,22 +59,36 @@ def mutation(dna: torch.Tensor, Pm: float):
 
 
 def judge(dna: torch.Tensor, NE: int):
-    (NP, ME) = dna.shape
-    # 求和
-    temp = torch.matmul(dna, torch.ones(ME,))
+    NP, ME = dna.shape
+    ones = torch.ones(ME, dtype=dna.dtype, device=dna.device)
+
+    # 计算每个序列中1的总数
+    total_ones = torch.matmul(dna, ones)
+
+    # 计算每个序列与NE的差异
+    difference = total_ones - NE
+
     for i in range(NP):
-        # 大于  1->0
-        if temp[i] > NE:
+        if difference[i] > 0:
+            # 需要移除的1的数量
+            num_to_remove = int(difference[i].item())
             # 找出所有1的索引
-            idx = torch.where(dna[i, 1:ME-1] == 1)[0]+1
-            # 需要个数P=temp[i]-NE的1->0
-            dna[i][idx[torch.multinomial(torch.ones(
-                idx.shape), int((temp[i]-NE).item()), False)]] = 0
-        # 小于  0->1
-        elif temp[i] < NE:
-            idx = torch.where(dna[i, 1:ME-1] == 0)[0]+1
-            dna[i][idx[torch.multinomial(torch.ones(
-                idx.shape), int((NE-temp[i]).item()), False)]] = 1
+            ones_idx = torch.where(dna[i] == 1)[0]
+            # 随机选择一些1转换为0
+            if len(ones_idx) > 0:
+                remove_idx = ones_idx[torch.randperm(len(ones_idx))[
+                    :num_to_remove]]
+                dna[i, remove_idx] = 0
+        elif difference[i] < 0:
+            # 需要添加的1的数量
+            num_to_add = int(-difference[i].item())
+            # 找出所有0的索引
+            zeros_idx = torch.where(dna[i] == 0)[0]
+            # 随机选择一些0转换为1
+            if len(zeros_idx) > 0:
+                add_idx = zeros_idx[torch.randperm(
+                    len(zeros_idx))[:num_to_add]]
+                dna[i, add_idx] = 1
     return dna
 
 
@@ -111,36 +126,3 @@ def plot(G: int, ybest: torch.Tensor):
         template="simple_white",
     )
     fig.show()
-
-
-def main():
-    # 种群数
-    NP = 50
-    # 交叉率
-    Pc = 0.8
-    # 变异率
-    Pm = 0.050
-    # 迭代次数
-    G = 50
-    # 实际阵元个数
-    NE = 50
-    # 满阵阵元个数
-    ME = 100
-    # 波长（米）
-    lamb = 1
-    # 阵列间距
-    d = 0.5*lamb
-    # 波束指向（角度）
-    theta_0 = 0
-    # 扫描精度
-    delta = 1800
-    # 阵列口径（米）
-    # AA = d*(ME-1)
-
-    # dna(NP,ME)
-    dna = generate.gen(NP, ME, NE)
-    GA(dna, G, Pc, Pm, NE, lamb, d, delta, theta_0)
-
-
-if __name__ == "__main__":
-    main()

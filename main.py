@@ -1,6 +1,21 @@
 import generate
 import GA
 import pattern
+import torch
+# import torch_directml
+
+
+# if torch_directml.is_available():
+#     device = torch_directml.device(0)
+# else:
+#     device = torch.device("cpu")
+
+
+if torch.cuda.is_available():
+    device = torch.device("cuda")
+else:
+    device = torch.device("cpu")
+# device = torch.device("cpu")
 
 
 if __name__ == "__main__":
@@ -11,9 +26,10 @@ if __name__ == "__main__":
     # 变异率
     Pm = 0.050
     # 迭代次数
-    G = 200
+    G = 10
+
     # 实际阵元个数
-    NE = 50
+    NE = 24
     # 满阵阵元个数
     ME = 100
     # 波长（米）
@@ -31,14 +47,16 @@ if __name__ == "__main__":
     theta_max = 90.0
 
     # dna(NP,ME)
-    dna = generate.gen(NP, ME, NE)
+    dna = generate.gen(NP, ME, NE).to(device)
+    phase0 = torch.zeros_like(dna)
 
     ybest, dnabest = GA.GA(dna, G, Pc, Pm, NE, lamb, d, delta, theta_0)
 
-    Fdb1 = pattern.pattern(dna[0], lamb, d, delta, theta_0)
-    pattern.plot(Fdb1, delta, theta_min, theta_max)
+    Fdb1 = pattern.pattern(dna, phase0, lamb, d, delta, theta_0)
+    pattern.plot(Fdb1[0], delta, theta_min, theta_max)
 
-    Fdb2 = pattern.pattern(dnabest, lamb, d, delta, theta_0)
-    pattern.plot(Fdb2, delta, theta_min, theta_max)
+    Fdb2 = pattern.pattern(dnabest.reshape(
+        1, ME), phase0, lamb, d, delta, theta_0)
+    pattern.plot(Fdb2[0], delta, theta_min, theta_max)
 
     GA.plot(G, ybest)
