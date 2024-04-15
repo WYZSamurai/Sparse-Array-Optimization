@@ -26,7 +26,7 @@ if __name__ == "__main__":
     # 变异率
     Pm = 0.050
     # 迭代次数
-    G = 10
+    G = 2000
 
     # 实际阵元个数
     NE = 24
@@ -51,12 +51,20 @@ if __name__ == "__main__":
     phase0 = torch.zeros_like(dna)
 
     ybest, dnabest = GA.GA(dna, G, Pc, Pm, NE, lamb, d, delta, theta_0)
+    save_path = "bestdna.pth"
+    print("保存最佳阵元位置。。。。。")
+    torch.save(dnabest, save_path)
+    print("保存完成")
 
+    print("生成优化前方向图。。。。。")
     Fdb1 = pattern.pattern(dna, phase0, lamb, d, delta, theta_0)
     pattern.plot(Fdb1[0], delta, theta_min, theta_max)
+    print("保存完成")
 
-    Fdb2 = pattern.pattern(dnabest.reshape(
+    print("生成优化后方向图。。。。。")
+    Fdb2 = pattern.pattern(dnabest.to(device=dna.device).reshape(
         1, ME), phase0, lamb, d, delta, theta_0)
     pattern.plot(Fdb2[0], delta, theta_min, theta_max)
+    print("保存完成")
 
     GA.plot(G, ybest)

@@ -52,7 +52,8 @@ def crossover(dna: torch.Tensor, Pc: float):
 
 def mutation(dna: torch.Tensor, Pm: float):
     # (1,ME-2)
-    P = (torch.rand(dna.shape)-Pm * torch.ones(dna.shape))
+    P = (torch.rand(dna.shape, device=dna.device) -
+         Pm * torch.ones(dna.shape, device=dna.device))
     dna = torch.where(P > 0, input=dna, other=1-dna)
     dna[:, [0, -1]] = 1
     return dna
@@ -97,6 +98,7 @@ def GA(dna: torch.Tensor, G: int, Pc: float, Pm: float, NE: int, lamb: float, d:
     ybest = torch.zeros(G,)
     dnabest = torch.zeros(G, ME)
 
+    print("开始优化")
     for i in range(G):
         print("第", i+1, "代")
         fit, ybest[i], dnabest[i] = fitness(dna, lamb, d, delta, theta_0)

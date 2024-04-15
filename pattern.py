@@ -44,7 +44,7 @@ def plot(Fdb: torch.Tensor, delta: int, theta_min: float, theta_max: float):
     fig.add_traces(
         go.Scatter(
             x=theta,
-            y=Fdb,
+            y=Fdb.to(device=torch.device("cpu")),
         )
     )
     fig.update_layout(
