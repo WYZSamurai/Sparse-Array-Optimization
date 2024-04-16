@@ -2,13 +2,6 @@ import generate
 import GA
 import pattern
 import torch
-# import torch_directml
-
-
-# if torch_directml.is_available():
-#     device = torch_directml.device(0)
-# else:
-#     device = torch.device("cpu")
 
 
 if torch.cuda.is_available():
