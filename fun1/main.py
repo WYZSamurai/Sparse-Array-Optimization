@@ -19,7 +19,7 @@ if __name__ == "__main__":
     # 变异率
     Pm = 0.050
     # 迭代次数
-    G = 2000
+    G = 20
 
     # 实际阵元个数
     NE = 24
@@ -44,7 +44,7 @@ if __name__ == "__main__":
     phase0 = torch.zeros_like(dna)
 
     ybest, dnabest = GA.GA(dna, G, Pc, Pm, NE, lamb, d, delta, theta_0)
-    save_path = "bestdna.pth"
+    save_path = "fun1/bestdna.pth"
     print("保存最佳阵元位置。。。。。")
     torch.save(dnabest, save_path)
     print("保存完成")
