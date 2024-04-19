@@ -2,8 +2,8 @@ import torch
 import plotly.graph_objects as go
 
 
-# 多个个体的方向图
 def pattern_multiple(mag: torch.Tensor, phase0: torch.Tensor, lamb: float, d: float, theta0: float, phi0: float, dt: int, dp: int):
+    # 多个个体的方向图
     pi = torch.pi
     _, m, n = mag.shape
     k = 2*pi/lamb
@@ -35,8 +35,8 @@ def pattern_multiple(mag: torch.Tensor, phase0: torch.Tensor, lamb: float, d: fl
     return Fdb
 
 
-# 单个个体的方向图
 def pattern(mag: torch.Tensor, phase0: torch.Tensor, lamb: float, d: torch.Tensor, theta0: float, phi0: float, dt: int, dp: int):
+    # 单个个体的方向图
     pi = torch.pi
     k = 2 * pi / lamb
 
@@ -65,6 +65,10 @@ def pattern(mag: torch.Tensor, phase0: torch.Tensor, lamb: float, d: torch.Tenso
     Fdb = 20 * torch.log10(F / F.max())
 
     return Fdb
+
+
+def Sll(Fdb: torch.Tensor):
+    pass
 
 
 def plot(Fdb: torch.Tensor, dt: int, dp: int):

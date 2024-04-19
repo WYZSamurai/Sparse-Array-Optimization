@@ -3,6 +3,12 @@ import generate
 import pattern
 
 
+if torch.cuda.is_available():
+    device = torch.device("cuda")
+else:
+    device = torch.device("cpu")
+
+
 # 天线相关
 L = 9.5
 H = 4.5
