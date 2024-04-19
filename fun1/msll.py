@@ -1,8 +1,8 @@
 import torch
 
 
-# 计算最大副瓣电平
 def msll(Fdb: torch.Tensor):
+    # 计算最大副瓣电平
     batch_size, delta = Fdb.shape
 
     # 主瓣最大值的位置
