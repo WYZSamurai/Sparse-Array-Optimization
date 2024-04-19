@@ -67,6 +67,30 @@ def pattern(mag: torch.Tensor, phase0: torch.Tensor, lamb: float, d: torch.Tenso
     return Fdb
 
 
+def patternt(mag: torch.Tensor, phase0: torch.Tensor, lamb: float, d: torch.Tensor, theta0: float, phi0: float, dt: int):
+    pi = torch.pi
+    k = 2 * pi / lamb
+    theta0_rad = torch.tensor(theta0) * pi / 180
+    phi0_rad = torch.tensor(phi0) * pi / 180
+    theta_rad = torch.linspace(-pi / 2, pi / 2, dt)
+    ang1 = torch.cos(theta_rad)*torch.sin(phi0_rad) - \
+        torch.cos(theta0_rad)*torch.sin(phi0_rad)
+    ang2 = torch.sin(theta_rad)-torch.sin(theta0_rad)
+    m, n = mag.shape
+    dm = k*d.real.reshape(m, n, 1)*ang1.reshape(1, 1, dt)
+    dn = k*d.imag.reshape(m, n, 1)*ang2.reshape(1, 1, dt)
+    phase_contributions = phase0.unsqueeze(-1)+dm+dn
+    complex_exponentials = torch.exp(torch.complex(
+        torch.zeros_like(phase_contributions), phase_contributions))
+    F = (mag.unsqueeze(-1) * complex_exponentials).sum(dim=(0, 1)).abs()
+    Fdb = 20 * torch.log10(F / F.max()+0.0001)
+    return Fdb
+
+
+def patternp():
+    pass
+
+
 def Sll(Fdb: torch.Tensor):
     pass
 
@@ -90,4 +114,18 @@ def plot(Fdb: torch.Tensor, dt: int, dp: int):
     )
 
     # 显示图表
+    fig.show()
+
+
+def plott(Fdb: torch.Tensor, d: int):
+    ang = torch.linspace(-90.0, 90.0, d)
+    fig = go.Figure(data=[go.Scatter(x=ang, y=Fdb.cpu())])
+    fig.update_layout(
+        title="截面方向图",
+        scene=dict(
+            xaxis_title='ang',
+            yaxis_title='Fdb'
+        ),
+        autosize=True,
+    )
     fig.show()

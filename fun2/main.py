@@ -39,7 +39,13 @@ phase0 = torch.zeros_like(mag)
 
 # 生成种群(NP, Ny, Nz)
 ff, f = generate.gen(NP, Ny, Nz, L, H, dc)
+print(ff[0])
+
+# 绘制截面方向图
+Fdb = pattern.patternt(mag[0], phase0[0], lamb, ff[0], theta0, phi0, dt)
+pattern.plott(Fdb, dt)
 
 
+# 绘制3d方向图
 # Fdb = pattern.pattern(mag[0], phase0[0], lamb, ff[0], theta0, phi0, dt, dp)
 # pattern.plot(Fdb, dt, dp)
