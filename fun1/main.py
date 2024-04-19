@@ -52,12 +52,14 @@ if __name__ == "__main__":
     print("生成优化前方向图。。。。。")
     Fdb1 = pattern.pattern(dna, phase0, lamb, d, delta, theta_0)
     pattern.plot(Fdb1[0], delta, theta_min, theta_max)
-    print("保存完成")
+    print("完成")
 
     print("生成优化后方向图。。。。。")
     Fdb2 = pattern.pattern(dnabest.to(device=dna.device).reshape(
         1, ME), phase0, lamb, d, delta, theta_0)
     pattern.plot(Fdb2[0], delta, theta_min, theta_max)
-    print("保存完成")
+    print("完成")
 
+    print("生成优化中适应度。。。。。")
     GA.plot(G, ybest)
+    print("结束程序")

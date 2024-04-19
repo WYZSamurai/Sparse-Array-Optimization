@@ -63,18 +63,16 @@ def judge(dna: torch.Tensor, NE: int):
     NP, ME = dna.shape
     ones = torch.ones(ME, dtype=dna.dtype, device=dna.device)
 
-    # 计算每个序列中1的总数
-    total_ones = torch.matmul(dna, ones)
-
-    # 计算每个序列与NE的差异
-    difference = total_ones - NE
+    # 计算每个序列中1的总数,计算每个序列与NE的差异
+    difference = torch.matmul(dna, ones)-NE
+    print(difference)
 
     for i in range(NP):
         if difference[i] > 0:
             # 需要移除的1的数量
             num_to_remove = int(difference[i].item())
-            # 找出所有1的索引
-            ones_idx = torch.where(dna[i] == 1)[0]
+            # 找出[1,ME-2]1的索引
+            ones_idx = torch.where(dna[i][1:ME-1] == 1)[0]+1
             # 随机选择一些1转换为0
             if len(ones_idx) > 0:
                 remove_idx = ones_idx[torch.randperm(len(ones_idx))[
@@ -90,6 +88,8 @@ def judge(dna: torch.Tensor, NE: int):
                 add_idx = zeros_idx[torch.randperm(
                     len(zeros_idx))[:num_to_add]]
                 dna[i, add_idx] = 1
+    difference = torch.matmul(dna, ones)-NE
+    print(difference)
     return dna
 
 
