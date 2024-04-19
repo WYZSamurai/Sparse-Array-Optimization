@@ -62,7 +62,7 @@ def pattern(mag: torch.Tensor, phase0: torch.Tensor, lamb: float, d: torch.Tenso
 
     F = (mag.unsqueeze(-1).unsqueeze(-1) *
          complex_exponentials).sum(dim=(0, 1)).abs()
-    Fdb = 20 * torch.log10(F / F.max())
+    Fdb = 20 * torch.log10(F / F.max()+0.0001)
 
     return Fdb
 

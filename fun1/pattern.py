@@ -31,7 +31,7 @@ def pattern(mag: torch.Tensor, phase_0: torch.Tensor, lamb: float, d: float, del
     F = torch.sum(complex_exponential, dim=1).abs()
 
     # 转换为db，按批次中每个个体的最大值进行归一化
-    Fdb = 20 * torch.log10(F / F.max(dim=1, keepdim=True).values)
+    Fdb = 20 * torch.log10(F / F.max(dim=1, keepdim=True).values+0.0001)
 
     return Fdb
 
