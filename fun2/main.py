@@ -26,13 +26,14 @@ dt = 360
 dp = 360
 
 
-# 激励相位
+# 激励相位(NP, Ny, Nz)
 mag = torch.ones(NP, Ny, Nz)
 phase0 = torch.zeros_like(mag)
 
 
-ff = generate.gen(NP, Ny, Nz, L, H, dc)
+# 生成种群(NP, Ny, Nz)
+ff, f = generate.gen(NP, Ny, Nz, L, H, dc)
 
 
-Fdb = pattern.pattern(mag[0], phase0[0], lamb, ff[0], theta0, phi0, dt, dp)
-pattern.plot(Fdb, dt, dp)
+# Fdb = pattern.pattern(mag[0], phase0[0], lamb, ff[0], theta0, phi0, dt, dp)
+# pattern.plot(Fdb, dt, dp)
