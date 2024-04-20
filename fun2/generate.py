@@ -5,11 +5,9 @@ def gen(NP: int, Ny: int, Nz: int, L: float, H: float, dc: float):
     # NP种群数，Ny阵元y方向数，Nz阵元z方向数，NE=Ny*Nz为实际阵元数>=4，L口径y，H口径z，dc孔径约束
     # 输出dd真实距离(加入dc) d调整值(没加入dc)
 
-    if L-(Ny-1)*dc < 0 or H-(Nz-1)*dc < 0:
-        print("警告！！！！！阵元间距小于限制值。")
-        return
+    assert L-(Ny-1)*dc < 0 or H-(Nz-1)*dc < 0, "警告！！！！！阵元间距小于限制值。"
 
-        # (NP,Ny,Nz)
+    # (NP,Ny,Nz)
     y = torch.rand(NP, Ny, Nz)*(L-(Ny-1)*dc)
     y, _ = y.sort(1)
     y[:, 0, 0] = 0

@@ -25,9 +25,24 @@ def select(f: torch.Tensor, fit: torch.Tensor):
     return f
 
 
-def cross():
-    # 交叉阶段
-    pass
+def cross(f: torch.Tensor, Pc: float) -> torch.Tensor:
+    """
+    对个体群体进行交叉（重组）
+    参数:
+        dna: 3D形状张量（NP，Ny，Nz），表示个体的群体，其中每个个体是形状矩阵（Ny，Nz.）。
+        Pc: 表示交叉概率的0和1之间的浮点值。
+
+    输出:
+        将交叉的改良dna张量应用于选定的成对个体。
+    """
+    NP, Ny, Nz = f.shape
+    P = torch.rand(NP,)-Pc
+    for i in range(NP):
+        if P[i] < 0:
+            cuty = torch.randint(0, Ny, (1,))
+            cutz = torch.randint(0, Nz, (1,))
+
+    return f
 
 
 def mutation():
