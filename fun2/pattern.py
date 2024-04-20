@@ -3,7 +3,7 @@ import plotly.graph_objects as go
 
 
 def pattern_multiple(mag: torch.Tensor, phase0: torch.Tensor, lamb: float, d: float, theta0: float, phi0: float, dt: int, dp: int):
-    # 多个个体的方向图
+    # 多个个体的3d方向图
     pi = torch.pi
     _, m, n = mag.shape
     k = 2*pi/lamb
@@ -35,8 +35,8 @@ def pattern_multiple(mag: torch.Tensor, phase0: torch.Tensor, lamb: float, d: fl
     return Fdb
 
 
-def pattern(mag: torch.Tensor, phase0: torch.Tensor, lamb: float, d: torch.Tensor, theta0: float, phi0: float, dt: int, dp: int):
-    # 单个个体的方向图
+def pattern3d(mag: torch.Tensor, phase0: torch.Tensor, lamb: float, d: torch.Tensor, theta0: float, phi0: float, dt: int, dp: int):
+    # 单个个体的3d方向图
     pi = torch.pi
     k = 2 * pi / lamb
 
@@ -67,35 +67,97 @@ def pattern(mag: torch.Tensor, phase0: torch.Tensor, lamb: float, d: torch.Tenso
     return Fdb
 
 
-def patternt(mag: torch.Tensor, phase0: torch.Tensor, lamb: float, d: torch.Tensor, theta0: float, phi0: float, dt: int):
+def pattern2d(mag: torch.Tensor, phase0: torch.Tensor, lamb: float, d: torch.Tensor, theta0: float, phi0: float, dt: int, dp: int):
+    # 群体theta截面的方向图
+    # d/mag/phase0 (NP,M,N)
+    NP, m, n = mag.shape
     pi = torch.pi
     k = 2 * pi / lamb
     theta0_rad = torch.tensor(theta0) * pi / 180
     phi0_rad = torch.tensor(phi0) * pi / 180
-    theta_rad = torch.linspace(-pi / 2, pi / 2, dt)
+
+    # (dt,)
+    theta_rad = torch.linspace(-pi/2, pi/2, dt)
+    # (dp,)
+    phi_rad = torch.linspace(-pi/2, pi/2, dp)
+
+    # (dt,)
     ang1 = torch.cos(theta_rad)*torch.sin(phi0_rad) - \
         torch.cos(theta0_rad)*torch.sin(phi0_rad)
+    # (dt,)
     ang2 = torch.sin(theta_rad)-torch.sin(theta0_rad)
-    m, n = mag.shape
-    dm = k*d.real.reshape(m, n, 1)*ang1.reshape(1, 1, dt)
-    dn = k*d.imag.reshape(m, n, 1)*ang2.reshape(1, 1, dt)
+    # (NP,m,n,dt)
+    dm = k*d.real.reshape(NP, m, n, 1)*ang1.reshape(1, 1, 1, dt)
+    dn = k*d.imag.reshape(NP, m, n, 1)*ang2.reshape(1, 1, 1, dt)
     phase_contributions = phase0.unsqueeze(-1)+dm+dn
     complex_exponentials = torch.exp(torch.complex(
         torch.zeros_like(phase_contributions), phase_contributions))
-    F = (mag.unsqueeze(-1) * complex_exponentials).sum(dim=(0, 1)).abs()
-    Fdb = 20 * torch.log10(F / F.max()+0.0001)
-    return Fdb
+    # (NP,dt)
+    F = (mag.unsqueeze(-1) * complex_exponentials).sum(dim=(1, 2)).abs()
+    Fdb1 = 20 * torch.log10(F / F.max()+0.0001)
 
+    # (dp,)
+    ang1 = torch.cos(theta0_rad)*torch.sin(phi_rad) - \
+        torch.cos(theta0_rad)*torch.sin(phi0_rad)
+    ang2 = torch.sin(theta0_rad)-torch.sin(theta0_rad)
+    # (NP,m,n,dp)
+    dm = k*d.real.reshape(NP, m, n, 1)*ang1.reshape(1, 1, 1, dp)
+    dn = k*d.imag.reshape(NP, m, n, 1)*ang2
+    phase_contributions = phase0.unsqueeze(-1)+dm+dn
+    complex_exponentials = torch.exp(torch.complex(
+        torch.zeros_like(phase_contributions), phase_contributions))
+    # (NP,dp)
+    F = (mag.unsqueeze(-1) * complex_exponentials).sum(dim=(1, 2)).abs()
+    Fdb2 = 20 * torch.log10(F / F.max()+0.0001)
 
-def patternp():
-    pass
+    return Fdb1, Fdb2
 
 
 def Sll(Fdb: torch.Tensor):
-    pass
+    # 输入种群的Fdb2d值
+    # 计算最大副瓣电平
+    batch_size, delta = Fdb.shape
+
+    # 主瓣最大值的位置
+    maxi = Fdb.argmax(dim=1)
+
+    # 向右查找第一个电平增加的点
+    diffs_right = torch.diff(Fdb, dim=1)
+    right_changes = torch.cat([diffs_right, torch.full(
+        (batch_size, 1), -float('inf'), device=Fdb.device)], dim=1) > 0
+
+    # 构造一个大于maxi的序列索引矩阵
+    idx_right = torch.arange(delta, device=Fdb.device).repeat(batch_size, 1)
+    right_valid = (idx_right > maxi.unsqueeze(1)) & right_changes
+    indexr = torch.where(right_valid, idx_right, delta)
+    indexr = torch.min(indexr, dim=1).values - maxi
+
+    # 向左查找第一个电平增加的点
+    diffs_left = torch.diff(Fdb.flip(dims=[1]), dim=1)
+    left_changes = torch.cat([diffs_left, torch.full(
+        (batch_size, 1), -float('inf'), device=Fdb.device)], dim=1) > 0
+    idx_left = torch.arange(delta, device=Fdb.device).repeat(batch_size, 1)
+    left_valid = (idx_left > (delta - 1 - maxi).unsqueeze(1)) & left_changes
+    indexl = torch.where(left_valid, idx_left, delta)
+    # indexl(batch_size,)
+    indexl = torch.min(indexl, dim=1).values - (delta - 1 - maxi)
+
+    # 设置主瓣区域为-inf (maxi - indexl,maxi + indexr)
+    mask = torch.ones_like(Fdb, dtype=torch.bool)
+    ranges = torch.arange(delta, device=Fdb.device).repeat(batch_size, 1)
+    # 副瓣区域
+    mask &= ~((ranges >= (maxi - indexl).unsqueeze(1)) &
+              (ranges <= (maxi + indexr).unsqueeze(1)))
+
+    Fdb = Fdb.masked_fill(~mask, float('-inf'))
+
+    # 寻找调整后的最大电平(batch_size,)
+    MSLL = Fdb.max(dim=1).values
+
+    return MSLL
 
 
-def plot(Fdb: torch.Tensor, dt: int, dp: int):
+def plot3d(Fdb: torch.Tensor, dt: int, dp: int):
     phi = torch.linspace(-90.0, 90.0, dp)
     theta = torch.linspace(-90.0, 90.0, dt)
 
@@ -117,7 +179,7 @@ def plot(Fdb: torch.Tensor, dt: int, dp: int):
     fig.show()
 
 
-def plott(Fdb: torch.Tensor, d: int):
+def plot2d(Fdb: torch.Tensor, d: int):
     ang = torch.linspace(-90.0, 90.0, d)
     fig = go.Figure(data=[go.Scatter(x=ang, y=Fdb.cpu())])
     fig.update_layout(
@@ -125,6 +187,30 @@ def plott(Fdb: torch.Tensor, d: int):
         scene=dict(
             xaxis_title='ang',
             yaxis_title='Fdb'
+        ),
+        autosize=True,
+    )
+    fig.show()
+
+
+def poltff(ff: torch.Tensor):
+    # 个体的阵元位置
+    Ny, Nz = ff.shape
+    fig = go.Figure()
+    fig.add_traces(
+        data=go.Scatter(
+            x=ff.cpu().real.reshape(Ny*Nz,),
+            y=ff.cpu().imag.reshape(Ny*Nz,),
+            mode="markers"
+        ),
+    )
+    fig.update_layout(
+        title="阵元位置图",
+        xaxis=dict(
+            title="y方向",
+        ),
+        yaxis=dict(
+            title="z方向",
         ),
         autosize=True,
     )
