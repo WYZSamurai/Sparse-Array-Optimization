@@ -77,9 +77,9 @@ def pattern2d(mag: torch.Tensor, phase0: torch.Tensor, lamb: float, d: torch.Ten
     phi0_rad = torch.tensor(phi0) * pi / 180
 
     # (dt,)
-    theta_rad = torch.linspace(-pi/2, pi/2, dt)
+    theta_rad = torch.linspace(-pi/2, pi/2, dt, device=d.device)
     # (dp,)
-    phi_rad = torch.linspace(-pi/2, pi/2, dp)
+    phi_rad = torch.linspace(-pi/2, pi/2, dp, device=d.device)
 
     # (dt,)
     ang1 = torch.cos(theta_rad)*torch.sin(phi0_rad) - \

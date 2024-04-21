@@ -13,6 +13,8 @@ def fitness(mag: torch.Tensor, phase0: torch.Tensor, lamb: float, ff: torch.Tens
         fit = fit/fit.sum()
     else:
         fit = (fit-fit[minidx])/(fit[maxidx]-fit[minidx])
+    print(fit)
+    print(ffbest)
     return fit, ffbest
 
 
@@ -22,6 +24,7 @@ def select(f: torch.Tensor, fit: torch.Tensor):
     P = (fit/fit.sum())
     index = torch.multinomial(input=P, num_samples=NP, replacement=True)
     f = f[index]
+    print(f)
     return f
 
 
@@ -41,7 +44,6 @@ def cross(f: torch.Tensor, Pc: float) -> torch.Tensor:
         if P[i] < 0:
             cuty = torch.randint(0, Ny, (1,))
             cutz = torch.randint(0, Nz, (1,))
-
     return f
 
 
@@ -57,8 +59,8 @@ def reform():
 def GA(ff: torch.Tensor, f: torch.Tensor, lamb: float, theta0: float, phi0: float, dt: int, dp: int, G: int):
     NP, Ny, Nz = ff.shape
 
-    mag = torch.ones(NP, Ny, Nz)
-    phase0 = torch.zeros_like(mag)
+    mag = torch.ones(NP, Ny, Nz, device=ff.device)
+    phase0 = torch.zeros_like(mag, device=ff.device)
 
     # (G,Ny,Nz)
     ffbest = torch.complex(torch.zeros(G, Ny, Nz), torch.zeros(G, Ny, Nz))

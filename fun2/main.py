@@ -23,7 +23,7 @@ Nz = 10
 
 
 # 算法相关
-NP = 50
+NP = 3
 G = 1
 Pc = 0.8
 Pm = 0.050
@@ -31,11 +31,6 @@ dt = 360
 dp = 360
 
 
-# 激励相位(NP, Ny, Nz)
-mag = torch.ones(NP, Ny, Nz)
-phase0 = torch.zeros_like(mag)
-
-
 # 生成种群(NP, Ny, Nz)
-ff, f = generate.gen(NP, Ny, Nz, L, H, dc)
+ff, f = generate.gen(NP, Ny, Nz, L, H, dc, device)
 GA.GA(ff, f, lamb, theta0, phi0, dt, dp, G)
