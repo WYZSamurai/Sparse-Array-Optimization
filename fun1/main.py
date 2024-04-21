@@ -2,6 +2,7 @@ import generate
 import GA
 import pattern
 import torch
+import time
 
 
 if torch.cuda.is_available():
@@ -18,7 +19,7 @@ if __name__ == "__main__":
     # 变异率
     Pm = 0.050
     # 迭代次数
-    G = 20
+    G = 1000
 
     # 实际阵元个数
     NE = 24
@@ -42,7 +43,12 @@ if __name__ == "__main__":
     dna = generate.gen(NP, ME, NE).to(device)
     phase0 = torch.zeros_like(dna)
 
+    start_time = time.time()
     ybest, dnabest = GA.GA(dna, G, Pc, Pm, NE, lamb, d, delta, theta_0)
+    end_time = time.time()
+    duration = end_time - start_time
+    print("算法执行时长：", duration, "秒")
+
     save_path = "fun1/bestdna.pth"
     print("保存最佳阵元位置。。。。。")
     torch.save(dnabest, save_path)

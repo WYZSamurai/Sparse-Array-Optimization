@@ -60,12 +60,12 @@ def mutation(dna: torch.Tensor, Pm: float):
 
 
 def judge(dna: torch.Tensor, NE: int):
+    # 无bug
     NP, ME = dna.shape
     ones = torch.ones(ME, dtype=dna.dtype, device=dna.device)
 
     # 计算每个序列中1的总数,计算每个序列与NE的差异
     difference = torch.matmul(dna, ones)-NE
-    print(difference)
 
     for i in range(NP):
         if difference[i] > 0:
@@ -88,8 +88,6 @@ def judge(dna: torch.Tensor, NE: int):
                 add_idx = zeros_idx[torch.randperm(
                     len(zeros_idx))[:num_to_add]]
                 dna[i, add_idx] = 1
-    difference = torch.matmul(dna, ones)-NE
-    print(difference)
     return dna
 
 
