@@ -105,9 +105,8 @@ def GA(dna: torch.Tensor, G: int, Pc: float, Pm: float, NE: int, lamb: float, d:
         dna = mutation(dna, Pm)
         dna = judge(dna, NE)
         dna[0] = dnabest[i]
-
-    bestindex = torch.argmin(ybest)
     print("算法结束")
+    bestindex = torch.argmin(ybest)
     print("最佳dna值为：\n", dnabest[bestindex])
     print("最佳函数值为：\n", ybest[bestindex])
     return ybest, dnabest[bestindex]

@@ -3,7 +3,9 @@ import plotly.graph_objects as go
 
 
 def pattern_multiple(mag: torch.Tensor, phase0: torch.Tensor, lamb: float, d: float, theta0: float, phi0: float, dt: int, dp: int):
-    # 多个个体的3d方向图
+    """
+    多个个体的3d方向图
+    """
     pi = torch.pi
     _, m, n = mag.shape
     k = 2*pi/lamb
@@ -36,7 +38,9 @@ def pattern_multiple(mag: torch.Tensor, phase0: torch.Tensor, lamb: float, d: fl
 
 
 def pattern3d(mag: torch.Tensor, phase0: torch.Tensor, lamb: float, d: torch.Tensor, theta0: float, phi0: float, dt: int, dp: int):
-    # 单个个体的3d方向图
+    """
+    单个个体的3d方向图
+    """
     pi = torch.pi
     k = 2 * pi / lamb
 
@@ -68,7 +72,9 @@ def pattern3d(mag: torch.Tensor, phase0: torch.Tensor, lamb: float, d: torch.Ten
 
 
 def pattern2d(mag: torch.Tensor, phase0: torch.Tensor, lamb: float, d: torch.Tensor, theta0: float, phi0: float, dt: int, dp: int):
-    # 群体theta截面的方向图
+    """
+    群体theta截面的方向图
+    """
     # d/mag/phase0 (NP,M,N)
     NP, m, n = mag.shape
     pi = torch.pi
@@ -114,8 +120,9 @@ def pattern2d(mag: torch.Tensor, phase0: torch.Tensor, lamb: float, d: torch.Ten
 
 
 def Sll(Fdb: torch.Tensor):
-    # 输入种群的Fdb2d值
-    # 计算最大副瓣电平
+    """
+    输入种群的Fdb2d值,计算最大副瓣电平
+    """
     batch_size, delta = Fdb.shape
 
     # 主瓣最大值的位置
@@ -157,7 +164,11 @@ def Sll(Fdb: torch.Tensor):
     return MSLL
 
 
-def plot3d(Fdb: torch.Tensor, dt: int, dp: int):
+def plot3d(Fdb: torch.Tensor):
+    """
+    绘制个体3d方向图
+    """
+    dt, dp = Fdb.shape
     phi = torch.linspace(-90.0, 90.0, dp)
     theta = torch.linspace(-90.0, 90.0, dt)
 
@@ -179,7 +190,11 @@ def plot3d(Fdb: torch.Tensor, dt: int, dp: int):
     fig.show()
 
 
-def plot2d(Fdb: torch.Tensor, d: int):
+def plot2d(Fdb: torch.Tensor):
+    """
+    绘制个体截面图
+    """
+    d = Fdb.shape[0]
     ang = torch.linspace(-90.0, 90.0, d)
     fig = go.Figure(data=[go.Scatter(x=ang, y=Fdb.cpu())])
     fig.update_layout(
@@ -194,7 +209,9 @@ def plot2d(Fdb: torch.Tensor, d: int):
 
 
 def poltff(ff: torch.Tensor):
-    # 个体的阵元位置
+    """
+    绘制个体的阵元位置
+    """
     Ny, Nz = ff.shape
     fig = go.Figure()
     fig.add_traces(
