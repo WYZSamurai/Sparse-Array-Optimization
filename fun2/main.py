@@ -24,7 +24,7 @@ Nz = 10
 
 # 算法相关
 NP = 100
-G = 1000
+G = 150
 Pc = 0.8
 Pm = 0.100
 dt = 360
@@ -38,10 +38,12 @@ fitbest, ffbest = GA.GA(ff, f, lamb, theta0, phi0, dt, dp, G, Pc, Pm, L, H, dc)
 
 print("绘制最佳阵元位置图")
 GA.pattern.poltff(ffbest)
+print("完成")
 
 
 print("绘制适应度曲线。")
 GA.plot(G, fitbest)
+print("完成")
 
 
 print("绘制最佳个体的3d方向图")
@@ -49,3 +51,5 @@ mag = torch.ones(Ny, Nz)
 phase0 = torch.zeros_like(mag)
 Fdb = GA.pattern.pattern3d(mag, phase0, lamb, ffbest, theta0, phi0, dt, dp)
 GA.pattern.plot3d(Fdb)
+print("完成")
+print("结束程序")

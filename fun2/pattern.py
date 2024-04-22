@@ -184,6 +184,7 @@ def plot3d(Fdb: torch.Tensor):
             zaxis_title='Fdb'
         ),
         autosize=True,
+        template="simple_white",
     )
 
     # 显示图表
@@ -203,6 +204,7 @@ def plot2d(Fdb: torch.Tensor):
             xaxis_title='ang',
             yaxis_title='Fdb'
         ),
+        template="simple_white",
         autosize=True,
     )
     fig.show()
@@ -230,5 +232,6 @@ def poltff(ff: torch.Tensor):
             title="z方向",
         ),
         autosize=True,
+        template="simple_white",
     )
     fig.show()
