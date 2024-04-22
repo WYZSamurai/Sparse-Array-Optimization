@@ -81,8 +81,8 @@ def reform(f: torch.Tensor, L: float, H: float, dc: float):
     z[:, 0, -1] = H-(Nz-1)*dc
     z[:, -1, -1] = H-(Nz-1)*dc
 
-    dy = y+dc*torch.arange(0, Ny).unsqueeze(0).unsqueeze(-1)
-    dz = z+dc*torch.arange(0, Nz).unsqueeze(0).unsqueeze(0)
+    dy = y+dc*torch.arange(0, Ny, device=f.device).unsqueeze(0).unsqueeze(-1)
+    dz = z+dc*torch.arange(0, Nz, device=f.device).unsqueeze(0).unsqueeze(0)
 
     ff = torch.complex(dy, dz)
     f = torch.complex(y, z)
