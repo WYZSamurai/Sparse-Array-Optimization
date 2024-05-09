@@ -135,6 +135,14 @@ def plot(G: int, ybest: torch.Tensor):
         )
     )
     fig.update_layout(
+        title="适应度曲线图",
+        xaxis=dict(
+            title="迭代次数",
+        ),
+        yaxis=dict(
+            title="适应度",
+        ),
+        autosize=True,
         template="simple_white",
     )
     fig.show()
