@@ -1,6 +1,7 @@
 import torch
 import generate
 import GA
+import time
 
 
 if torch.cuda.is_available():
@@ -24,7 +25,7 @@ Nz = 10
 
 # 算法相关
 NP = 1000
-G = 2000
+G = 500
 Pc = 0.8
 Pm = 0.100
 dt = 360
@@ -33,7 +34,11 @@ dp = 360
 
 # 生成种群(NP, Ny, Nz)
 ff, f = generate.gen(NP, Ny, Nz, L, H, dc, device)
+begin = time.time()
 fitbest, ffbest = GA.GA(ff, f, lamb, theta0, phi0, dt, dp, G, Pc, Pm, L, H, dc)
+end = time.time()
+total = end-begin
+print("算法总耗时：", total)
 
 
 print("绘制最佳阵元位置图")
