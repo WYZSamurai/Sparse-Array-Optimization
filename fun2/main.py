@@ -14,7 +14,7 @@ else:
 # y方向
 L = 9.5
 # z方向
-H = 4.5
+H = 9.5
 lamb = 1.0
 dc = 0.5*lamb
 theta0 = 0.0

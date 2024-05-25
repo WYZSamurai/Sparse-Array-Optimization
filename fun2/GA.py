@@ -8,7 +8,10 @@ def fitness(mag: torch.Tensor, phase0: torch.Tensor, lamb: float, ff: torch.Tens
     适应值计算
     """
     Fdb1, Fdb2 = pattern.pattern2d(mag, phase0, lamb, ff, theta0, phi0, dt, dp)
-    fit = -(pattern.Sll(Fdb1)+pattern.Sll(Fdb2))
+    sll1 = pattern.Sll(Fdb1)
+    sll2 = pattern.Sll(Fdb2)
+    print(sll1[0], sll2[0])
+    fit = -(sll1+sll2)
     maxidx = fit.argmax()
     minidx = fit.argmin()
     fitbest = fit[maxidx]
