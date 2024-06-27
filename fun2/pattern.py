@@ -40,6 +40,8 @@ def pattern_multiple(mag: torch.Tensor, phase0: torch.Tensor, lamb: float, d: fl
 def pattern3d(mag: torch.Tensor, phase0: torch.Tensor, lamb: float, d: torch.Tensor, theta0: float, phi0: float, dt: int, dp: int):
     """
     单个个体的3d方向图
+    mag\phase0:Ny*Nz
+    d:真实位置信息（非间距）
     """
     pi = torch.pi
     k = 2 * pi / lamb
